@@ -30,7 +30,7 @@ const PRODUCTS = [
   "category": "electronics",
   "brand": "Raycon",
   "asin": "B07TjcEFx",
-  "image": "61FIBGir-IL._AC_SL1500_.jpg",
+  "image": "https://kommodo.ai/i/zhKOtxbUwoXep9FW2Bfp",
   "amazonUrl": "https://link.amazon/B03qEtahl",
   "buttonText": "Check Price",
   "rating": 4.2,
