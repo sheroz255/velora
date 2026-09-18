@@ -23,21 +23,21 @@
 
 const PRODUCTS = [
   {
-    "id": "sony-wh-1000xm5",
-    "title": "Sony WH-1000XM5 Wireless Noise-Canceling Headphones",
-    "slug": "sony-wh-1000xm5",
-    "description": "Industry-leading noise canceling, 30-hour battery, and a lighter sculpted fit. The XM5 is the commute, flight, and deep-work default.",
-    "category": "electronics",
-    "brand": "Sony",
-    "asin": null,
-    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
-    "amazonUrl": "https://www.amazon.com/s?k=Sony+WH-1000XM5&tag=sheroztariq-20",
-    "buttonText": "Check Price",
-    "rating": 4.8,
-    "reviewCount": 21403,
-    "badge": "Flash Deal",
-    "featured": true
-  },
+  "id": "B07TjcEFx",
+  "title": "Raycon Everyday Bluetooth Wireless Earbuds with Microphone - Active Noise Cancelling, Sweat & Water-Resistant Earphones, Ear Buds Wireless Bluetooth (Black)",
+  "slug": "raycon-everyday-bluetooth-wireless-earbuds-black",
+  "description": "Wireless Bluetooth earbuds with active noise cancellation, microphone, and sweat and water resistance. Comfortable in-ear design for music, calls, and gaming.",
+  "category": "electronics",
+  "brand": "Raycon",
+  "asin": "B07TjcEFx",
+  "image": "https://m.media-amazon.com/images/I/61FIBGir-IL._AC_SL1500_.jpg",
+  "amazonUrl": "https://www.amazon.com/dp/B07TjcEFx?tag=sheroztariq-20",
+  "buttonText": "Check Price",
+  "rating": 4.2,
+  "reviewCount": 30860,
+  "badge": "Amazon's Choice",
+  "featured": true
+  }, 
   {
     "id": "airpods-pro-2",
     "title": "Apple AirPods Pro (2nd Generation) with USB-C",
