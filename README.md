@@ -1,29 +1,46 @@
-# Velora — GitHub Pages (No Backend)
+# Velora — Static Amazon Affiliate Storefront
 
-Static Amazon affiliate product discovery storefront.
+Pure front-end. **No backend. No admin. No prices on site** — button opens Amazon for live price.
 
 ## Files
-- `index.html` — page structure only
-- `css/style.css` — all site styling
-- `js/app.js` — catalog loading, search, filters, wishlist, bag and Amazon links
-- `products.json` — product catalog (edit this file to add/update products)
 
-## GitHub Pages
-Keep the files/folders at the repository root:
+| File | Purpose |
+|------|---------|
+| `index.html` | Main page |
+| `style.css` | Styles |
+| `products.js` | **Edit products here** |
+| `app.js` | UI logic |
 
-```text
-velora/
-├── index.html
-├── products.json
-├── css/
-│   └── style.css
-└── js/
-    └── app.js
+## Product format (`products.js`)
+
+```js
+{
+  "id": "B095T14D4S",
+  "title": "Raycon Everyday Bluetooth Wireless Earbuds ...",
+  "slug": "raycon-everyday-bluetooth-wireless-earbuds-black",
+  "description": "Wireless Bluetooth earbuds with ANC...",
+  "category": "electronics",
+  "brand": "Raycon",
+  "asin": "B095T14D4S",
+  "image": "https://m.media-amazon.com/images/I/61FIBGir-IL._AC_SL1500_.jpg",
+  "amazonUrl": "https://www.amazon.com/dp/B095T14D4S?tag=sheroztariq-20",
+  "buttonText": "Check Price",
+  "rating": 4.2,
+  "reviewCount": 30859,
+  "badge": "Amazon's Choice",
+  "featured": true
+}
 ```
 
-In GitHub: **Settings → Pages → Deploy from branch → main → /(root)**.
+- **No price field** — users click "Check Price" → Amazon
+- Put your affiliate tag inside every `amazonUrl`
+- `image` = product image URL (Amazon media or any HTTPS)
+- `category` must be one of: electronics, fashion, home, beauty, sports, books, toys
 
-After editing `products.json`, commit the change. GitHub Pages will publish the updated catalog.
+## Deploy (GitHub Pages)
 
-## Important
-Do not rename `css/style.css`, `js/app.js`, or `products.json` unless you also update the paths in `index.html` / `js/app.js`.
+1. Upload these files to a repo
+2. Settings → Pages → branch `main` / root
+3. Live at `https://USER.github.io/REPO/`
+
+Edit `products.js` → commit → push → everyone sees updates.

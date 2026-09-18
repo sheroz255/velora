@@ -1,59 +1,310 @@
-const DEFAULT_AMAZON_TAG="YOURTAG-20";
-const CATS=[["electronics", "Electronics", "Audio, tech, kits"], ["fashion", "Fashion", "Apparel & watches"], ["home", "Home", "Kitchen & living"], ["beauty", "Beauty", "Skin & fragrance"], ["sports", "Sports", "Train & recover"], ["books", "Books", "Read & learn"], ["toys", "Toys", "Play & build"]];
-let products=[];
-let productsLoaded=false;
-const WISH="velora_wishlist_v1", CART="velora_cart_v1";
-let filter="all";
+/* ============================================================
+   Velora — Static frontend (no backend)
+   Routing via hash: # / #product/slug / #category/slug / #deals
+   ============================================================ */
 
+(function () {
+  "use strict";
 
-function money(c){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:c%100===0?0:2}).format(c/100)}
-async function loadProducts(){
-  try{
-    const response=await fetch("./products.json",{cache:"no-store"});
-    if(!response.ok) throw new Error("products.json HTTP "+response.status);
-    const data=await response.json();
-    if(!Array.isArray(data)) throw new Error("products.json must contain an array");
-    products=data;
-    productsLoaded=true;
-    buildCats();
-    setHeroImages();
-    render();
-    updateCart();
-  }catch(error){
-    console.error("Velora catalog load failed:",error);
-    document.getElementById("products").innerHTML='<div class="empty">Catalog could not be loaded. Please check that <strong>products.json</strong> is in the same GitHub folder as index.html.</div>';
-    document.getElementById("featured").innerHTML='';
-    document.getElementById("resultCount").textContent='';
+  const $ = (sel, el = document) => el.querySelector(sel);
+  const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
+
+  function starsHtml(rating) {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.4;
+    let html = '<span class="stars" aria-label="' + rating + ' out of 5">';
+    for (let i = 0; i < 5; i++) {
+      if (i < full) html += "★";
+      else if (i === full && half) html += "★";
+      else html += "☆";
+    }
+    html += "</span>";
+    return html;
   }
-}
 
-function setHeroImages(){
-  const byCat=(cat)=>products.find(p=>p.category===cat && p.image);
-  const e=byCat("electronics"), f=byCat("fashion"), h=byCat("home");
-  if(e) document.getElementById("heroE").src=e.image;
-  if(f) document.getElementById("heroF").src=f.image;
-  if(h) document.getElementById("heroH").src=h.image;
-}
+  function badgeClass(badge) {
+    if (!badge) return "";
+    const b = badge.toLowerCase();
+    if (b.includes("flash") || b.includes("deal")) return "flash";
+    if (b.includes("premium") || b.includes("rare") || b.includes("choice")) return "premium";
+    return "";
+  }
 
-function amazon(p){
-  if(p.amazonUrl) return p.amazonUrl;
-  const u=new URL("https://www.amazon.com/s");
-  u.searchParams.set("k",p.query||p.title);
-  u.searchParams.set("tag",p.affiliateTag||DEFAULT_AMAZON_TAG);
-  return u.toString();
-}
-function renderCard(p){let w=JSON.parse(localStorage.getItem(WISH)||"[]").includes(p.slug);return `<article class="card"><div class="pic"><img src="${esc(p.image||p.imageUrl||"")}" alt="${esc(p.title)}" loading="lazy"><div class="badges">${p.badge?`<span class="badge">${esc(p.badge)}</span>`:""}</div><button class="heart" onclick="toggleWish('${esc(p.slug)}');event.stopPropagation()">${w?"♥":"♡"}</button></div><div class="body"><div class="brandtxt">${esc(p.brand||"")}</div><a class="title" href="#" onclick="openProduct('${esc(p.slug)}');return false">${esc(p.title)}</a><div class="rating">★ ${Number(p.rating||0).toFixed(1)} · ${Number(p.reviewCount||0).toLocaleString()} reviews</div><div class="buy"><button class="primary" onclick="buy('${esc(p.slug)}');event.stopPropagation()">${esc(p.buttonText||"Check Price")} ↗</button></div></div></article>`}
-function filtered(){let q=document.getElementById("search").value.toLowerCase().trim();let a=products.filter(p=>(filter==="all"||p.category===filter)&&(!q||[p.title,p.brand,p.description,p.category].join(" ").toLowerCase().includes(q)));let s=document.getElementById("sort").value;if(s==="rating")a.sort((a,b)=>(b.rating||0)-(a.rating||0));if(s==="newest")a.sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));if(s==="popular")a.sort((a,b)=>(b.soldCount||0)-(a.soldCount||0));return a}
-function render(){let a=filtered();document.getElementById("products").innerHTML=a.length?a.map(renderCard).join(""):'<div class="empty">No products found.</div>';document.getElementById("resultCount").textContent=a.length+" products";document.getElementById("featured").innerHTML=products.filter(p=>p.featured).slice(0,8).map(renderCard).join("")}
-function filterCat(c){filter=c;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x.dataset.cat===c));render();document.getElementById("shop").scrollIntoView({behavior:"smooth"})}
-function buildCats(){document.getElementById("categories").innerHTML='<button class="chip active" data-cat="all" onclick="filterCat(\'all\')">All</button>'+CATS.map(c=>`<button class="chip" data-cat="${c[0]}" onclick="filterCat('${c[0]}')">${c[1]}</button>`).join("")}
-function openProduct(slug){let p=products.find(x=>x.slug===slug);if(!p)return;document.getElementById("modalPanel").innerHTML=`<button class="close" onclick="closeModal()">×</button><div class="productView"><img src="${esc(p.image||p.imageUrl||"")}" alt="${esc(p.title)}"><div class="pv"><div class="brandtxt">${esc(p.brand||"")}</div><h2>${esc(p.title)}</h2><div class="rating">★ ${Number(p.rating||0).toFixed(1)} · ${Number(p.reviewCount||0).toLocaleString()} reviews</div><p class="desc">${esc(p.description||"")}</p><div class="buy"><button class="primary" onclick="buy('${esc(p.slug)}')">${esc(p.buttonText||"Check Price")} ↗</button></div><p class="mini">Clicking the button takes you to Amazon. Product price and availability are shown on Amazon.</p></div></div>`;document.getElementById("modal").classList.add("show")}
-function closeModal(){document.getElementById("modal").classList.remove("show")}
-function buy(slug){let p=products.find(x=>x.slug===slug);if(p)window.open(amazon(p),"_blank","noopener,noreferrer")}
-function toggleWish(slug){let w=JSON.parse(localStorage.getItem(WISH)||"[]");w=w.includes(slug)?w.filter(x=>x!==slug):[...w,slug];localStorage.setItem(WISH,JSON.stringify(w));render()}
-function cart(){return JSON.parse(localStorage.getItem(CART)||"[]")}
-function addCart(slug){let c=cart();c.push(slug);localStorage.setItem(CART,JSON.stringify(c));updateCart();alert("Added to bag")}
-function updateCart(){document.getElementById("cartCount").textContent=cart().length}
+  /* ---------- Render helpers ---------- */
 
-loadProducts();
-function openCart(){let c=cart(),ps=c.map(s=>products.find(p=>p.slug===s)).filter(Boolean);document.getElementById("modalPanel").innerHTML=`<button class="close" onclick="closeModal()">×</button><h2>Your bag</h2>${ps.length?ps.map(p=>`<div class="bagItem"><img src="${esc(p.image||p.imageUrl||"")}"><div class="grow"><strong>${esc(p.title)}</strong><div class="mini">${esc(p.brand||"")}</div></div><button class="primary" onclick="buy('${esc(p.slug)}')">${esc(p.buttonText||"Check Price")} ↗</button></div>`).join(""):'<p class="desc">Your bag is empty.</p>'}<p class="mini">Checkout and final price are handled on Amazon.</p>`;document.getElementById("modal").classList.add("show")}
+  function productCard(p) {
+    const btn = p.buttonText || "Check Price";
+    return `
+      <article class="product-card" data-slug="${p.slug}" role="link" tabindex="0">
+        <div class="product-img-wrap">
+          ${p.badge ? `<span class="badge ${badgeClass(p.badge)}">${escapeHtml(p.badge)}</span>` : ""}
+          <img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}" loading="lazy" />
+        </div>
+        <div class="product-body">
+          <span class="product-brand">${escapeHtml(p.brand || "")}</span>
+          <h3 class="product-title">${escapeHtml(p.title)}</h3>
+          <div class="product-rating">
+            ${starsHtml(p.rating)}
+            <span>(${Number(p.reviewCount || 0).toLocaleString()})</span>
+          </div>
+          <a class="card-btn" href="${escapeAttr(p.amazonUrl)}" target="_blank" rel="noopener noreferrer sponsored" onclick="event.stopPropagation()">
+            ${escapeHtml(btn)}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </article>`;
+  }
+
+  function productGrid(list) {
+    if (!list.length) {
+      return `<div class="empty-state"><h3>No products found</h3><p>Try another search or category.</p></div>`;
+    }
+    return `<div class="product-grid">${list.map(productCard).join("")}</div>`;
+  }
+
+  function section(kicker, title, extra = "", body) {
+    return `
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">${kicker}</p>
+            <h2 class="section-title">${title}</h2>
+          </div>
+          ${extra}
+        </div>
+        ${body}
+      </section>`;
+  }
+
+  /* ---------- Views ---------- */
+
+  function viewHome() {
+    const featured = PRODUCTS.filter((p) => p.featured);
+    const deals = PRODUCTS.filter((p) => p.badge && /deal|flash|choice/i.test(p.badge));
+    const all = PRODUCTS.slice(0, 16);
+
+    const catHtml = CATEGORIES.map(
+      (c) => `
+      <a href="#category/${c.slug}" class="cat-card" data-cat="${c.slug}">
+        <span class="cat-icon">${c.label.slice(0, 1)}</span>
+        <span class="cat-label">${c.label}</span>
+      </a>`
+    ).join("");
+
+    return `
+      <section class="hero">
+        <div>
+          <p class="hero-kicker">Curated · Amazon</p>
+          <h1>Finds worth opening a new tab for</h1>
+          <p>Hand-picked products with real ratings. Check live price on Amazon.</p>
+          <a href="#deals" class="hero-cta">
+            Browse deals
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>${PRODUCTS.length}</strong><span>Products</span></div>
+          <div class="hero-stat"><strong>${CATEGORIES.length}</strong><span>Categories</span></div>
+          <div class="hero-stat"><strong>4.7★</strong><span>Avg rating</span></div>
+        </div>
+      </section>
+
+      ${section("Browse", "Departments", "", `<div class="cat-grid">${catHtml}</div>`)}
+
+      ${section(
+        "Limited",
+        "Deals & picks",
+        `<a href="#deals" class="section-link">View all →</a>`,
+        productGrid(deals.length ? deals.slice(0, 8) : featured.slice(0, 8))
+      )}
+
+      ${section("Featured", "Editor picks", "", productGrid(featured))}
+
+      ${section("Shop", "All products", "", productGrid(all))}
+    `;
+  }
+
+  function viewCategory(slug) {
+    const cat = CATEGORIES.find((c) => c.slug === slug);
+    const list = PRODUCTS.filter((p) => p.category === slug);
+    const title = cat ? cat.label : slug;
+    return `
+      <a href="#" class="back-link">← Back to home</a>
+      ${section("Category", title, `<span style="color:var(--muted);font-size:0.85rem">${list.length} items</span>`, productGrid(list))}
+    `;
+  }
+
+  function viewDeals() {
+    const list = PRODUCTS.filter((p) => p.badge && /deal|flash|choice|best/i.test(p.badge));
+    const show = list.length ? list : PRODUCTS.filter((p) => p.featured);
+    return `
+      <a href="#" class="back-link">← Back to home</a>
+      ${section("Limited time", "Deals & picks", `<span style="color:var(--muted);font-size:0.85rem">${show.length} items</span>`, productGrid(show))}
+    `;
+  }
+
+  function viewSearch(q) {
+    const term = q.toLowerCase().trim();
+    const list = PRODUCTS.filter(
+      (p) =>
+        (p.title && p.title.toLowerCase().includes(term)) ||
+        (p.brand && p.brand.toLowerCase().includes(term)) ||
+        (p.category && p.category.toLowerCase().includes(term)) ||
+        (p.description && p.description.toLowerCase().includes(term))
+    );
+    return `
+      <a href="#" class="back-link">← Back to home</a>
+      ${section("Search", `Results for “${escapeHtml(q)}”`, `<span style="color:var(--muted);font-size:0.85rem">${list.length} found</span>`, productGrid(list))}
+    `;
+  }
+
+  function viewProduct(slug) {
+    const p = PRODUCTS.find((x) => x.slug === slug);
+    if (!p) {
+      return `<div class="empty-state"><h3>Product not found</h3><a href="#" class="back-link">← Home</a></div>`;
+    }
+    const btn = p.buttonText || "Check Price";
+    return `
+      <a href="#" class="back-link">← Back</a>
+      <div class="detail">
+        <div class="detail-img">
+          <img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.title)}" />
+        </div>
+        <div class="detail-info">
+          ${p.badge ? `<span class="badge ${badgeClass(p.badge)}" style="position:static;align-self:flex-start">${escapeHtml(p.badge)}</span>` : ""}
+          <span class="detail-brand">${escapeHtml(p.brand || "")}</span>
+          <h1 class="detail-title">${escapeHtml(p.title)}</h1>
+          <div class="detail-meta">
+            ${starsHtml(p.rating)}
+            <span>${p.rating} · ${Number(p.reviewCount || 0).toLocaleString()} reviews</span>
+          </div>
+          <p class="detail-desc">${escapeHtml(p.description || "")}</p>
+          <a class="buy-btn" href="${escapeAttr(p.amazonUrl)}" target="_blank" rel="noopener noreferrer sponsored">
+            ${escapeHtml(btn)}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <p style="font-size:0.75rem;color:var(--subtle);margin-top:0.25rem">Opens Amazon in a new tab · affiliate link</p>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ---------- Router ---------- */
+
+  function parseHash() {
+    const h = (location.hash || "#").slice(1);
+    if (!h || h === "/") return { view: "home" };
+    if (h === "deals") return { view: "deals" };
+    if (h.startsWith("category/")) return { view: "category", slug: h.slice(9) };
+    if (h.startsWith("product/")) return { view: "product", slug: h.slice(8) };
+    if (h.startsWith("search/")) return { view: "search", q: decodeURIComponent(h.slice(7)) };
+    return { view: "home" };
+  }
+
+  function render() {
+    const route = parseHash();
+    const app = $("#app");
+    let html = "";
+
+    switch (route.view) {
+      case "product":
+        html = viewProduct(route.slug);
+        break;
+      case "category":
+        html = viewCategory(route.slug);
+        break;
+      case "deals":
+        html = viewDeals();
+        break;
+      case "search":
+        html = viewSearch(route.q || "");
+        break;
+      default:
+        html = viewHome();
+    }
+
+    app.innerHTML = html;
+    bindCards();
+    updateNav(route);
+    window.scrollTo(0, 0);
+  }
+
+  function bindCards() {
+    $$(".product-card").forEach((card) => {
+      const go = () => {
+        location.hash = "product/" + card.dataset.slug;
+      };
+      card.addEventListener("click", go);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          go();
+        }
+      });
+    });
+  }
+
+  function updateNav(route) {
+    $$(".nav-desktop a").forEach((a) => {
+      const cat = a.dataset.cat;
+      a.classList.toggle("active", route.view === "category" && route.slug === cat);
+    });
+  }
+
+  function buildNav() {
+    const nav = $("#nav-cats");
+    if (!nav) return;
+    nav.innerHTML = CATEGORIES.map(
+      (c) => `<a href="#category/${c.slug}" data-cat="${c.slug}">${c.label}</a>`
+    ).join("");
+  }
+
+  /* ---------- Search ---------- */
+
+  let searchTimer;
+  function setupSearch() {
+    const input = $("#search-input");
+    if (!input) return;
+    input.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        const q = input.value.trim();
+        if (q.length >= 2) {
+          location.hash = "search/" + encodeURIComponent(q);
+        } else if (!q && location.hash.startsWith("#search")) {
+          location.hash = "";
+        }
+      }, 280);
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const q = input.value.trim();
+        if (q) location.hash = "search/" + encodeURIComponent(q);
+      }
+    });
+  }
+
+  /* ---------- Utils ---------- */
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function escapeAttr(str) {
+    return escapeHtml(str).replace(/'/g, "&#39;");
+  }
+
+  /* ---------- Boot ---------- */
+
+  document.addEventListener("DOMContentLoaded", () => {
+    buildNav();
+    setupSearch();
+    render();
+    window.addEventListener("hashchange", render);
+  });
+})();
