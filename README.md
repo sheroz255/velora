@@ -1,40 +1,29 @@
-# Velora — GitHub-only product catalog
+# Velora — GitHub Pages (No Backend)
 
-No backend, no database, no admin panel, and no Vercel dependency. The website reads products from `products.json` in this GitHub repository.
+Static Amazon affiliate product discovery storefront.
 
-## Add a product
-Edit `products.json` on GitHub and add an object like:
+## Files
+- `index.html` — page structure only
+- `css/style.css` — all site styling
+- `js/app.js` — catalog loading, search, filters, wishlist, bag and Amazon links
+- `products.json` — product catalog (edit this file to add/update products)
 
-```json
-{
-  "title": "Product name",
-  "slug": "product-name",
-  "description": "Short description",
-  "category": "electronics",
-  "brand": "Brand",
-  "image": "https://example.com/product.jpg",
-  "amazonUrl": "https://www.amazon.com/dp/PRODUCTID/?tag=YOURTAG-20",
-  "buttonText": "Check Price",
-  "rating": 4.7,
-  "reviewCount": 1200,
-  "badge": "Best Seller",
-  "featured": true
-}
+## GitHub Pages
+Keep the files/folders at the repository root:
+
+```text
+velora/
+├── index.html
+├── products.json
+├── css/
+│   └── style.css
+└── js/
+    └── app.js
 ```
 
-There is no price field. The product card uses `buttonText` and sends visitors to `amazonUrl`.
+In GitHub: **Settings → Pages → Deploy from branch → main → /(root)**.
 
-## Images
-Use a publicly reachable image URL in `image`. You can also store images in this repository, for example `images/product-1.jpg`, and use `/images/product-1.jpg`.
-
-## GitHub-only workflow
-1. Create/open your GitHub repository.
-2. Upload `index.html` and `products.json` (and optionally an `images/` folder).
-3. Whenever you want to add or change products, open `products.json` on GitHub.
-4. Click the pencil/Edit button, update the JSON, then click **Commit changes**.
-5. Your GitHub-hosted copy will contain the updated catalog. If you later connect this repository to any static hosting service, that service can publish the same files automatically.
+After editing `products.json`, commit the change. GitHub Pages will publish the updated catalog.
 
 ## Important
-GitHub Pages is optional. This repository itself is the source of truth for the catalog. GitHub does not execute the site as a live web server unless you enable a hosting feature such as GitHub Pages.
-
-Do not put private API keys, passwords, tokens, or other secrets in `products.json` or `index.html`.
+Do not rename `css/style.css`, `js/app.js`, or `products.json` unless you also update the paths in `index.html` / `js/app.js`.
