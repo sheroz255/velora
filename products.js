@@ -23,15 +23,15 @@
 
 const PRODUCTS = [
   {
-  "id": "B07TjcEFx",
+  "id": "B03qEtahl",
   "title": "Raycon Everyday Bluetooth Wireless Earbuds with Microphone - Active Noise Cancelling, Sweat & Water-Resistant Earphones, Ear Buds Wireless Bluetooth (Black)",
   "slug": "raycon-everyday-bluetooth-wireless-earbuds-black",
   "description": "Wireless Bluetooth earbuds with active noise cancellation, microphone, and sweat and water resistance. Comfortable in-ear design for music, calls, and gaming.",
   "category": "electronics",
   "brand": "Raycon",
   "asin": "B07TjcEFx",
-  "image": "https://m.media-amazon.com/images/I/61FIBGir-IL._AC_SL1500_.jpg",
-  "amazonUrl": "https://www.amazon.com/dp/B07TjcEFx?tag=sheroztariq-20",
+  "image": "61FIBGir-IL._AC_SL1500_.jpg",
+  "amazonUrl": "https://link.amazon/B03qEtahl",
   "buttonText": "Check Price",
   "rating": 4.2,
   "reviewCount": 30860,
